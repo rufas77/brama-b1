@@ -225,12 +225,14 @@
       const delays = [1000, 2000, 4000, 8000];
       for (let attempt = 0; attempt <= delays.length; attempt++) {
         try {
-          const response = await fetch(url, {
+              const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
             body: JSON.stringify(payload)
           });
-
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
           }
