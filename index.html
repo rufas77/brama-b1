@@ -209,7 +209,7 @@
 
     // Вызов Gemini API с экспоненциальным откатом (exponential backoff)
     async function callGeminiAPI(userPrompt, systemInstruction, jsonSchema = null) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+      const url = 'https://weathered-surf-a3bf.rufas77.workers.dev';
       const payload = {
         contents: [{ parts: [{ text: userPrompt }] }],
         systemInstruction: { parts: [{ text: systemInstruction }] }
@@ -229,9 +229,13 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey
+              
             },
-            body: JSON.stringify(payload)
+           body: JSON.stringify({
+  model: typeof GEMINI_MODEL !== 'undefined' ? GEMINI_MODEL : 'gemini-flash-latest',
+  payload
+})
+
           });
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
