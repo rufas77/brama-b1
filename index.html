@@ -1,0 +1,1563 @@
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Brama B1 PRO — Тренажер польского B1 без ограничений</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brama: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              200: '#DDD6FE',
+              500: '#7C3AED',
+              600: '#5B21B6',
+              700: '#4C1D95',
+              900: '#2E1065',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F7F6FA;
+      color: #18181B;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Плавный скролл и скрытие полосы прокрутки в горизонтальных табах */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .recording-pulse {
+      animation: pulseRing 1.5s infinite;
+    }
+    .card-shadow {
+      box-shadow: 0 4px 20px -2px rgba(91, 33, 182, 0.06), 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .flip-card-inner {
+      transition: transform 0.5s;
+      transform-style: preserve-3d;
+    }
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-front, .flip-back {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .flip-back {
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-24">
+
+  <!-- Уведомления (Toast) вместо alert() -->
+  <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md pointer-events-none flex flex-col gap-2"></div>
+
+  <!-- Верхняя шапка приложения -->
+  <header class="w-full max-w-lg bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-purple-100 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-brama-600 to-brama-500 flex items-center justify-center text-white font-extrabold text-lg shadow-sm">
+        B1
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-gray-900 text-base tracking-tight">Brama B1</span>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">PRO FREE</span>
+        </div>
+        <p class="text-[11px] text-gray-500">Без лимитов и подписок</p>
+      </div>
+    </div>
+
+    <!-- Бейдж Cegły (кирпичики) -->
+    <button onclick="switchTab('progress')" class="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 transition border border-amber-200/80 px-3 py-1.5 rounded-2xl">
+      <span class="text-base">🧱</span>
+      <span id="header-cegly" class="font-bold text-amber-900 text-sm">0</span>
+      <span class="text-xs text-amber-700 font-medium">cegieł</span>
+    </button>
+  </header>
+
+  <!-- Основной контейнер контента -->
+  <main id="app-content" class="w-full max-w-lg px-4 pt-4 flex-1">
+    <!-- Контент рендерится динамически через JS -->
+  </main>
+
+  <!-- Нижняя панель навигации в стиле Brama App -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 z-40 pb-safe">
+    <div class="max-w-lg mx-auto flex justify-around items-center py-2 px-2">
+      <button onclick="switchTab('exams')" id="nav-exams" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition">
+        <div class="nav-icon-wrap w-11 h-7 rounded-full flex items-center justify-center transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-semibold">Экзамены</span>
+      </button>
+
+      <button onclick="switchTab('practice')" id="nav-practice" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition">
+        <div class="nav-icon-wrap w-11 h-7 rounded-full flex items-center justify-center transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-semibold">Практика</span>
+      </button>
+
+      <button onclick="switchTab('vocab')" id="nav-vocab" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition">
+        <div class="nav-icon-wrap w-11 h-7 rounded-full flex items-center justify-center transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-semibold">Словарь</span>
+      </button>
+
+      <button onclick="switchTab('progress')" id="nav-progress" class="nav-btn flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition">
+        <div class="nav-icon-wrap w-11 h-7 rounded-full flex items-center justify-center transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-semibold">Прогресс</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    // =========================================================================
+    // 1. КОНФИГУРАЦИЯ GEMINI API И ХРАНИЛИЩЕ СОСТОЯНИЯ
+    // =========================================================================
+    const apiKey = ""; // Автоматически подставляется средой выполнения
+    const GEMINI_MODEL = "gemini-3-flash-preview";
+
+    // Инициализация состояния из localStorage
+    const defaultState = {
+      cegly: 12,
+      history: [], // { id, date, type, title, score, maxScore, userText, feedback }
+      masteredCards: []
+    };
+
+    let appState = (() => {
+      try {
+        const saved = localStorage.getItem('brama_b1_pro_state');
+        return saved ? { ...defaultState, ...JSON.parse(saved) } : defaultState;
+      } catch (e) {
+        return defaultState;
+      }
+    })();
+
+    function saveState() {
+      try {
+        localStorage.setItem('brama_b1_pro_state', JSON.stringify(appState));
+        updateHeaderStats();
+      } catch (e) {
+        console.warn('Не удалось сохранить прогресс в localStorage');
+      }
+    }
+
+    function updateHeaderStats() {
+      const el = document.getElementById('header-cegly');
+      if (el) el.textContent = appState.cegly;
+    }
+
+    // Всплывающие уведомления
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = {
+        info: 'bg-gray-900 text-white',
+        success: 'bg-emerald-600 text-white',
+        warning: 'bg-amber-600 text-white',
+        error: 'bg-rose-600 text-white'
+      };
+      toast.className = `${colors[type] || colors.info} px-4 py-3 rounded-2xl shadow-lg text-sm font-medium flex items-center justify-between transition-all duration-300 opacity-0 translate-y-[-8px]`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-[-8px]');
+      });
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-8px]');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    // Вызов Gemini API с экспоненциальным откатом (exponential backoff)
+    async function callGeminiAPI(userPrompt, systemInstruction, jsonSchema = null) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: userPrompt }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] }
+      };
+
+      if (jsonSchema) {
+        payload.generationConfig = {
+          responseMimeType: "application/json",
+          responseSchema: jsonSchema
+        };
+      }
+
+      const delays = [1000, 2000, 4000, 8000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const result = await response.json();
+          const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) throw new Error("Пустой ответ от модели");
+
+          return jsonSchema ? JSON.parse(text) : text;
+        } catch (err) {
+          if (attempt === delays.length) {
+            throw err;
+          }
+          await new Promise(res => setTimeout(res, delays[attempt]));
+        }
+      }
+    }
+
+    // =========================================================================
+    // 2. ДАННЫЕ ДЛЯ ЗАДАНИЙ (ФОТО, МОНОЛОГИ, ПИСЬМО, РОЛЕВЫЕ ДИАЛОГИ, СЛОВАРЬ)
+    // =========================================================================
+
+    // Сцены для Задания 1: Описание фото (с встроенными детальными SVG-иллюстрациями)
+    const PHOTO_SCENES = [
+      {
+        id: 'kitchen',
+        title: 'Сцена 1: Готовка на кухне',
+        hintWords: ['na zdjęciu', 'kuchnia', 'kroi warzywa', 'deska do krojenia', 'fartuch', 'laptop'],
+        promptInfo: 'Женщина на светлой кухне в темной кофте и полосатом фартуке режет свежие овощи (помидоры, зелень, баклажан) на деревянной разделочной доске. Рядом на столе стоит открытый ноутбук с рецептом, красная кастрюля и бутылка оливкового масла.',
+        svg: `
+          <svg viewBox="0 0 400 220" class="w-full h-48 rounded-2xl bg-amber-50 border border-purple-100">
+            <!-- Окно и фон кухни -->
+            <rect width="400" height="220" fill="#FEF3C7"/>
+            <rect x="20" y="18" width="110" height="110" rx="8" fill="#BAE6FD" stroke="#92400E" stroke-width="4"/>
+            <line x1="75" y1="18" x2="75" y2="128" stroke="#92400E" stroke-width="3"/>
+            <line x1="20" y1="73" x2="130" y2="73" stroke="#92400E" stroke-width="3"/>
+            <!-- Полки справа -->
+            <rect x="255" y="42" width="120" height="6" rx="2" fill="#B45309"/>
+            <rect x="270" y="20" width="18" height="22" rx="3" fill="#F87171"/>
+            <rect x="295" y="24" width="15" height="18" rx="3" fill="#34D399"/>
+            <rect x="320" y="18" width="22" height="24" rx="3" fill="#60A5FA"/>
+            <!-- Женщина -->
+            <circle cx="175" cy="65" r="22" fill="#FDBA74"/>
+            <path d="M153 62 C153 38, 197 38, 197 62 C197 48, 153 48, 153 62 Z" fill="#451A03"/>
+            <!-- Улыбка и глаза -->
+            <circle cx="168" cy="63" r="2" fill="#1F2937"/>
+            <circle cx="182" cy="63" r="2" fill="#1F2937"/>
+            <path d="M169 72 Q175 78 181 72" stroke="#9A3412" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <!-- Кофта и фартук -->
+            <path d="M135 155 C135 105, 215 105, 215 155 Z" fill="#1E293B"/>
+            <rect x="152" y="108" width="46" height="47" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+            <line x1="162" y1="108" x2="162" y2="155" stroke="#94A3B8" stroke-width="1.5"/>
+            <line x1="175" y1="108" x2="175" y2="155" stroke="#94A3B8" stroke-width="1.5"/>
+            <line x1="188" y1="108" x2="188" y2="155" stroke="#94A3B8" stroke-width="1.5"/>
+            <!-- Стол -->
+            <rect x="0" y="152" width="400" height="68" fill="#D97706"/>
+            <rect x="0" y="152" width="400" height="6" fill="#B45309"/>
+            <!-- Разделочная доска и овощи -->
+            <rect x="115" y="164" width="110" height="16" rx="4" fill="#FDE68A" stroke="#92400E" stroke-width="1.5"/>
+            <circle cx="145" cy="161" r="6" fill="#EF4444"/>
+            <circle cx="158" cy="162" r="5" fill="#EF4444"/>
+            <ellipse cx="182" cy="161" rx="9" ry="5" fill="#22C55E"/>
+            <rect x="162" y="142" width="4" height="22" rx="1" transform="rotate(-25 162 142)" fill="#94A3B8"/>
+            <!-- Ноутбук на столе -->
+            <polygon points="245,122 295,122 288,162 238,162" fill="#E2E8F0" stroke="#475569" stroke-width="2"/>
+            <rect x="235" y="162" width="62" height="5" rx="2" fill="#64748B"/>
+            <!-- Кастрюля и масло -->
+            <rect x="315" y="138" width="44" height="26" rx="5" fill="#DC2626"/>
+            <rect x="312" y="134" width="50" height="5" rx="2" fill="#991B1B"/>
+            <rect x="370" y="128" width="14" height="36" rx="3" fill="#65A30D"/>
+          </svg>
+        `
+      },
+      {
+        id: 'cafe_work',
+        title: 'Сцена 2: Работа с ноутбуком в кафе',
+        hintWords: ['na pierwszym planie', 'kawiarnia', 'pracuje na laptopie', 'filiżanka kawy', 'skupiony', 'w tle'],
+        promptInfo: 'Молодой мужчина в повседневной рубашке сидит за деревянным столиком в уютной кофейне, печатает на ноутбуке и пьет кофе из белой чашки. На столе лежит блокнот и телефон, на заднем плане видны большие окна и растения.',
+        svg: `
+          <svg viewBox="0 0 400 220" class="w-full h-48 rounded-2xl bg-purple-50 border border-purple-100">
+            <rect width="400" height="220" fill="#F3E8FF"/>
+            <!-- Окно кафе -->
+            <rect x="220" y="20" width="155" height="120" rx="10" fill="#E0F2FE" stroke="#6D28D9" stroke-width="3"/>
+            <circle cx="330" cy="115" r="22" fill="#22C55E" opacity="0.8"/>
+            <rect x="322" y="122" width="16" height="18" fill="#92400E"/>
+            <!-- Парень -->
+            <circle cx="135" cy="70" r="23" fill="#FDBA74"/>
+            <path d="M112 65 C112 40, 158 40, 158 65 Z" fill="#1E293B"/>
+            <circle cx="129" cy="68" r="2" fill="#1F2937"/>
+            <circle cx="143" cy="68" r="2" fill="#1F2937"/>
+            <path d="M130 78 Q136 81 142 78" stroke="#9A3412" stroke-width="2" fill="none"/>
+            <path d="M90 160 C90 110, 180 110, 180 160 Z" fill="#4F46E5"/>
+            <!-- Стол -->
+            <rect x="0" y="156" width="400" height="64" fill="#92400E"/>
+            <!-- Ноутбук -->
+            <polygon points="165,112 235,112 225,156 155,156" fill="#CBD5E1" stroke="#334155" stroke-width="2"/>
+            <rect x="150" y="156" width="85" height="6" rx="2" fill="#475569"/>
+            <!-- Чашка кофе и пар -->
+            <rect x="265" y="138" width="24" height="20" rx="4" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+            <path d="M273 130 Q270 122 275 116" stroke="#94A3B8" stroke-width="2" fill="none"/>
+            <path d="M281 130 Q278 122 283 116" stroke="#94A3B8" stroke-width="2" fill="none"/>
+            <!-- Блокнот -->
+            <rect x="65" y="148" width="55" height="10" rx="2" fill="#FDE047"/>
+          </svg>
+        `
+      },
+      {
+        id: 'park_family',
+        title: 'Сцена 3: Прогулка в парке',
+        hintWords: ['na świeżym powietrzu', 'spacerują', 'drzewa', 'słoneczna pogoda', 'w dobrym humorze', 'odpoczynek'],
+        promptInfo: 'Двое друзей или пара гуляют по зеленому парку в солнечный день. Они улыбаются, разговаривают и несут рюкзак, вокруг высокие деревья, зеленая трава и пешеходная дорожка.',
+        svg: `
+          <svg viewBox="0 0 400 220" class="w-full h-48 rounded-2xl bg-emerald-50 border border-purple-100">
+            <rect width="400" height="145" fill="#DCFCE7"/>
+            <rect y="145" width="400" height="75" fill="#E5E7EB"/>
+            <!-- Солнце и деревья -->
+            <circle cx="345" cy="42" r="22" fill="#FACC15"/>
+            <circle cx="65" cy="65" r="38" fill="#16A34A"/>
+            <rect x="59" y="95" width="12" height="50" fill="#78350F"/>
+            <circle cx="285" cy="72" r="32" fill="#22C55E"/>
+            <rect x="280" y="98" width="10" height="47" fill="#78350F"/>
+            <!-- Персонаж 1 -->
+            <circle cx="155" cy="82" r="17" fill="#FDBA74"/>
+            <path d="M138 78 C138 58, 172 58, 172 78 Z" fill="#78350F"/>
+            <rect x="137" y="102" width="36" height="48" rx="10" fill="#7C3AED"/>
+            <line x1="147" y1="150" x2="143" y2="188" stroke="#1E293B" stroke-width="7" stroke-linecap="round"/>
+            <line x1="163" y1="150" x2="168" y2="188" stroke="#1E293B" stroke-width="7" stroke-linecap="round"/>
+            <!-- Персонаж 2 -->
+            <circle cx="215" cy="86" r="16" fill="#FDBA74"/>
+            <path d="M199 82 C199 62, 231 62, 231 82 Z" fill="#1F2937"/>
+            <rect x="198" y="105" width="34" height="45" rx="10" fill="#EC4899"/>
+            <line x1="208" y1="150" x2="205" y2="188" stroke="#334155" stroke-width="7" stroke-linecap="round"/>
+            <line x1="222" y1="150" x2="226" y2="188" stroke="#334155" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+        `
+      }
+    ];
+
+    // Темы для Задания 2: Монолог B1
+    const MONOLOGUE_TOPICS = [
+      {
+        id: 'family_city',
+        title: 'Мое родное место и семья (Moja rodzina i rodzinne miasto)',
+        points: [
+          'Откуда ты родом и как выглядит твой родной город (достопримечательности, природа).',
+          'Кто входит в твою семью и чем занимаются твои близкие.',
+          'Как вы любите проводить время вместе.'
+        ],
+        modelAnswer: 'Dzień dobry. Pochodzę z Ukrainy, z dużego miasta Zaporoże, które leży nad rzeką Dniepr. To bardzo ciekawe miejsce — znajduje się tam słynna wyspa Chortyca, gdzie można świetnie odpocząć na świeżym powietrzu. Moja rodzina nie jest bardzo duża. Mama jest już na emeryturze i zajmuje się sprawami domowymi, a tata nadal pracuje. Kiedy mamy wolny czas, lubimy rozmawiać przez telefon albo spotykać się na wspólny obiad. To wszystko, co chciałem powiedzieć.'
+      },
+      {
+        id: 'work_career',
+        title: 'Моя работа и профессиональные планы (Praca i rozwój)',
+        points: [
+          'Кем ты работаешь и в чем заключаются твои ежедневные обязанности.',
+          'Что тебе больше всего нравится в твоей работе, а что бывает сложным.',
+          'Почему польский язык важен для твоей дальнейшей карьеры.'
+        ],
+        modelAnswer: 'Chciałbym opowiedzieć o mojej pracy. Na co dzień pracuję jako specjalista i zajmuję się obsługą klientów oraz organizacją zadań. Najbardziej lubię to, że mam kontakt z ludźmi i każdy dzień przynosi nowe wyzwania. Czasami bywa stresująco, kiedy jest dużo obowiązków naraz, ale staram się zachować spokój. Znajomość języka polskiego na poziomie B1 jest dla mnie bardzo ważna, ponieważ pozwala mi swobodnie rozmawiać w pracy i daje większe możliwości rozwoju w Polsce.'
+      },
+      {
+        id: 'healthy_lifestyle',
+        title: 'Здоровый образ жизни и отдых (Zdrowy styl życia)',
+        points: [
+          'Что, по твоему мнению, значит вести здоровый образ жизни.',
+          'Как ты сам заботишься о здоровье и как отдыхаешь после работы.',
+          'Что сложнее всего соблюдать в современном ритме жизни.'
+        ],
+        modelAnswer: 'Moim zdaniem zdrowy styl życia to przede wszystkim regularny ruch, zdrowe odżywianie oraz odpowiednia ilość snu. Staram się dbać o siebie: codziennie dużo spaceruję, piję wodę i ograniczam słodycze. Po pracy lubię wyjść na spacer do parku albo poczytać książkę, żeby odpocząć od ekranu. Najtrudniej jest znaleźć równowagę między pracą a odpoczynkiem, bo często brakuje czasu, ale uważam, że zdrowie jest najważniejsze.'
+      }
+    ];
+
+    // Темы для Задания 3: Письмо (Pisanie ~150 слов)
+    const WRITING_TOPICS = [
+      {
+        id: 'zakopane_trip',
+        type: 'Электронное письмо другу (E-mail prywatny)',
+        title: 'Поездка в горы (Wyjazd w góry)',
+        task: 'Ты вернулся из поездки в Закопане (или другой горный город). Напиши письмо другу из Польши (около 150 слов), в котором:\n• опишешь, как прошла дорога и какая была погода,\n• расскажешь, как ты проводил время и что тебе понравилось больше всего,\n• предложишь поехать туда вместе следующей зимой.',
+        minWords: 135,
+        targetWords: 150,
+        maxWords: 185
+      },
+      {
+        id: 'flat_complaint',
+        type: 'Официальное письмо / сообщение арендодателю (Wiadomość oficjalna)',
+        title: 'Проблема в съемной квартире (Usterka w mieszkaniu)',
+        task: 'В квартире, которую ты снимаешь, сломалась стиральная машина или отопление. Напиши сообщение владельцу квартиры (около 150 слов), в котором:\n• вежливо опишешь, что и когда случилось,\n• объяснишь, почему это создает большие неудобства,\n• предложишь удобное время для визита мастера.',
+        minWords: 135,
+        targetWords: 150,
+        maxWords: 185
+      },
+      {
+        id: 'hobby_essay',
+        type: 'Короткое эссе / размышление (Wypowiedź argumentacyjna)',
+        title: 'Стоит ли изучать иностранные языки? (Czy warto uczyć się języków obcych?)',
+        task: 'Напиши текст для языкового блога (около 150 слов), в котором:\n• представишь свое мнение о роли иностранных языков в жизни,\n• приведешь два аргумента в пользу изучения польского языка,\n• поделишься своим опытом преодоления языкового барьера.',
+        minWords: 135,
+        targetWords: 150,
+        maxWords: 185
+      }
+    ];
+
+    // Ролевые диалоги (Раздел «Практика / Rozmowy») — 100% открыты!
+    const ROLEPLAY_SCENARIOS = [
+      {
+        id: 'zakopane_ski',
+        category: 'Путешествия и отдых',
+        title: 'Лыжи в Закопане',
+        badge: 'Państwowy B1',
+        icon: '⛷️',
+        aiRole: 'Друг-поляк Марек, который зовет тебя покататься на лыжах в Закопане на выходные.',
+        userGoal: 'Обсудить поездку: сказать, умеешь ли кататься, уточнить цены на прокат снаряжения/жилье и договориться о транспорте.',
+        openingLine: 'Cześć! Słuchaj, w przyszły weekend ma spaść świeży śnieg w Zakopanem. Pomyślałem, że moglibyśmy wyskoczyć tam na dwa dni na narty. Co ty na to?',
+        usefulPhrases: [
+          'To świetny pomysł, ale...',
+          'Nie mam własnego sprzętu, ile kosztuje wypożyczenie?',
+          'Czym najlepiej tam dojechać — pociągiem czy samochodem?',
+          'A jak z noclegiem, nie będzie za drogo?'
+        ]
+      },
+      {
+        id: 'phone_shop',
+        category: 'Покупки и сервисы',
+        title: 'Покупка телефона в магазине',
+        badge: 'Państwowy B1',
+        icon: '📱',
+        aiRole: 'Консультант в магазине электроники в Польше.',
+        userGoal: 'Выбрать новый смартфон: объяснить бюджет, нужные характеристики (батарея, камера) и сравнить две модели.',
+        openingLine: 'Dzień dobry! Witam w naszym salonie. Widzę, że ogląda Pan smartfony. Szuka Pan czegoś konkretnego, czy mogę coś doradzić?',
+        usefulPhrases: [
+          'Szukam czegoś budżetowego, ale z dobrą baterią.',
+          'Zależy mi na dobrej relacji ceny do jakości.',
+          'Ten model jest dla mnie trochę za drogi.',
+          'Czy macie teraz jakąś promocję na ten telefon?'
+        ]
+      },
+      {
+        id: 'neighbors_flat',
+        category: 'Жильё и соседи',
+        title: 'Разговор с шумным соседом',
+        badge: 'Państwowy B1',
+        icon: '🏠',
+        aiRole: 'Сосед сверху, который вечером громко слушает музыку и делает ремонт.',
+        userGoal: 'Вежливо, но твердо попросить соблюдать тишину вечером, объяснить ситуацию и найти компромисс.',
+        openingLine: 'O, dzień dobry sąsiedzie! Słucham? W czym mogę pomóc? Przepraszam za tę muzykę, właśnie kończę skręcać szafkę.',
+        usefulPhrases: [
+          'Przepraszam, że przeszkadzam, ale jest już późno.',
+          'Rano muszę wcześnie wstać do pracy.',
+          'Czy mógłby Pan trochę ściszyć muzykę?',
+          'Dziękuję za zrozumienie, spokojnego wieczoru!'
+        ]
+      },
+      {
+        id: 'repair_service',
+        category: 'Учреждения и услуги',
+        title: 'Сдача вещи в ремонт',
+        badge: 'Państwowy B1',
+        icon: '🛠️',
+        aiRole: 'Мастер в сервисном центре (ремонт ноутбуков / бытовой техники).',
+        userGoal: 'Описать поломку, узнать стоимость и сроки ремонта, уточнить гарантию.',
+        openingLine: 'Dzień dobry! Proszę powiedzieć, co dokładnie dzieje się z urządzeniem i od kiedy jest ten problem?',
+        usefulPhrases: [
+          'Od wczoraj w ogóle się nie włącza.',
+          'Ile mniej więcej będzie kosztować naprawa?',
+          'Na kiedy będzie to gotowe? Bardzo mi zależy na czasie.',
+          'Czy dostanę gwarancję na wymienioną część?'
+        ]
+      },
+      {
+        id: 'doctor_visit',
+        category: 'Здоровье',
+        title: 'Визит к врачу',
+        badge: 'Państwowy B1',
+        icon: '🩺',
+        aiRole: 'Терапевт в польской поликлинике (przychodnia).',
+        userGoal: 'Описать симптомы простуды/боли, ответить на вопросы врача и попросить больничный (L4) или рецепт.',
+        openingLine: 'Dzień dobry, proszę usiąść. Co Panu dolega? Jakie ma Pan objawy i od jak dawna?',
+        usefulPhrases: [
+          'Od dwóch dni mam gorączkę i boli mnie gardło.',
+          'Jestem bardzo osłabiony i mam kaszel.',
+          'Czy potrzebuję antybiotyku?',
+          'Czy mogę prosić o zwolnienie lekarskie (L4) na kilka dni?'
+        ]
+      }
+    ];
+
+    // Словарь-антикалька и связки для B1 (Раздел «Словарь»)
+    const VOCAB_CARDS = [
+      {
+        id: 'v1',
+        tag: 'Частая ловушка',
+        wrong: 'obcinać warzywa / chleb',
+        right: 'kroić warzywa / chleb',
+        explanation: '«Obcinać» — это обрезать (ногти, волосы, ветки). Овощи, хлеб и сыр на кухне мы всегда «kroimy» (режем).',
+        example: 'Kobieta kroi świeże warzywa na sałatkę.'
+      },
+      {
+        id: 'v2',
+        tag: 'Частая ловушка',
+        wrong: 'deska dla naczynania',
+        right: 'deska do krojenia',
+        explanation: 'Разделочная доска по-польски называется «deska do krojenia» (предлог «do» + отглагольное существительное).',
+        example: 'Przed nią leży drewniana deska do krojenia.'
+      },
+      {
+        id: 'v3',
+        tag: 'Частая ловушка',
+        wrong: 'Na dzień widzę kuchnię...',
+        right: 'Na zdjęciu widzę kuchnię...',
+        explanation: 'Не путай по звучанию: «zdjęcie» (фотография) → «na zdjęciu» (на фотографии).',
+        example: 'Na zdjęciu widać nowoczesną i jasną kuchnię.'
+      },
+      {
+        id: 'v4',
+        tag: 'Грамматика B1',
+        wrong: 'Po rzece chodzą statki',
+        right: 'Po rzece pływają statki',
+        explanation: 'В польском языке корабли, лодки и люди по воде «pływają», а не «chodzą». И «rzeka» — женского рода (po niej).',
+        example: 'To długa rzeka, po której pływają statki.'
+      },
+      {
+        id: 'v5',
+        tag: 'Связка для фото',
+        wrong: 'Тут справа есть...',
+        right: 'Na pierwszym planie / W tle...',
+        explanation: 'Экзаменаторы очень любят пространственные маркеры при описании картинки.',
+        example: 'Na pierwszym planie widzimy kobietę, a w tle znajduje się okno.'
+      },
+      {
+        id: 'v6',
+        tag: 'Связка для монолога',
+        wrong: 'Я думаю что...',
+        right: 'Moim zdaniem / Wydaje mi się, że...',
+        explanation: 'Отличные вводные конструкции уровня B1 для выражения своего мнения и предположений.',
+        example: 'Moim zdaniem nauka języków daje wiele możliwości.'
+      },
+      {
+        id: 'v7',
+        tag: 'Связка для письма',
+        wrong: 'В конце хочу сказать...',
+        right: 'Podsumowując / Na zakończenie...',
+        explanation: 'Помогает красиво завершить письмо или монолог на 150 слов без обрыва мысли.',
+        example: 'Podsumowując, wyjazd w góry był naprawdę udany.'
+      },
+      {
+        id: 'v8',
+        tag: 'Аргументация B1',
+        wrong: 'С одной стороны... с другой...',
+        right: 'Z jednej strony... z drugiej strony...',
+        explanation: 'Идеальная связка для эссе и рассуждений на B1, сразу добавляет +10 слов и логику.',
+        example: 'Z jednej strony praca jest wymagająca, ale z drugiej strony daje satysfakcję.'
+      }
+    ];
+
+    // =========================================================================
+    // 3. СОСТОЯНИЕ ТЕКУЩЕГО ЭКРАНА И ГОЛОСОВОЙ ВВОД (WEB SPEECH API)
+    // =========================================================================
+    let currentTab = 'exams';
+    let examSubTab = 'photo'; // 'photo' | 'monologue' | 'writing'
+    let selectedPhotoIdx = 0;
+    let selectedMonoIdx = 0;
+    let selectedWritingIdx = 0;
+
+    // Таймер для говорения
+    let timerInterval = null;
+    let timerSeconds = 0;
+    let isTimerRunning = false;
+
+    // Чат ролевой игры
+    let activeRoleplay = null;
+    let roleplayMessages = [];
+    let isRoleplayLoading = false;
+
+    // Распознавание речи (pl-PL)
+    let recognition = null;
+    let isRecording = false;
+    let activeTargetTextareaId = null;
+
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return null;
+      const rec = new SpeechRecognition();
+      rec.lang = 'pl-PL';
+      rec.interimResults = true;
+      rec.continuous = true;
+      return rec;
+    }
+
+    function toggleVoiceInput(textareaId, btnId) {
+      const textarea = document.getElementById(textareaId);
+      const btn = document.getElementById(btnId);
+      if (!textarea) return;
+
+      if (isRecording) {
+        stopVoiceInput();
+        return;
+      }
+
+      recognition = initSpeechRecognition();
+      if (!recognition) {
+        showToast('Голосовой ввод не поддерживается этим браузером. Используй микрофон на клавиатуре телефона или ввод текста.', 'warning');
+        return;
+      }
+
+      isRecording = true;
+      activeTargetTextareaId = textareaId;
+      const initialText = textarea.value.trim();
+      let finalTranscript = initialText ? initialText + ' ' : '';
+
+      if (btn) {
+        btn.classList.add('bg-rose-600', 'text-white', 'recording-pulse');
+        btn.classList.remove('bg-brama-100', 'text-brama-700');
+        btn.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-white"></span> Говорите по-польски... (Стоп)`;
+      }
+
+      // Автозапуск таймера если это задание на говорение
+      if (!isTimerRunning && (textareaId === 'photo-answer' || textareaId === 'mono-answer')) {
+        startTimer();
+      }
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+        textarea.value = (finalTranscript + interim).trim();
+        textarea.dispatchEvent(new Event('input'));
+      };
+
+      recognition.onerror = (event) => {
+        stopVoiceInput();
+        if (event.error === 'not-allowed') {
+          showToast('Доступ к микрофону запрещен в настройках браузера.', 'error');
+        } else {
+          showToast('Запись остановлена. Можно продолжить текстом или нажать микрофон снова.', 'info');
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecording) {
+          stopVoiceInput();
+        }
+      };
+
+      try {
+        recognition.start();
+      } catch (e) {
+        stopVoiceInput();
+      }
+    }
+
+    function stopVoiceInput() {
+      isRecording = false;
+      if (recognition) {
+        try { recognition.stop(); } catch (e) {}
+      }
+      render();
+    }
+
+    // Озвучка польского текста (TTS)
+    function speakPolish(text) {
+      if (!('speechSynthesis' in window)) {
+        showToast('Озвучка не поддерживается в этом браузере', 'warning');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pl-PL';
+      utterance.rate = 0.95;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Управление таймером
+    function startTimer() {
+      if (isTimerRunning) return;
+      isTimerRunning = true;
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        const el = document.getElementById('live-timer');
+        if (el) el.textContent = formatTime(timerSeconds);
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerSeconds = 0;
+      const el = document.getElementById('live-timer');
+      if (el) el.textContent = '00:00';
+    }
+
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    // =========================================================================
+    // 4. ПРОВЕРКА ОТВЕТОВ ЧЕРЕЗ GEMINI API (ОЦЕНКА B1 + РАЗБОР ОШИБОК)
+    // =========================================================================
+
+    const EVALUATION_SCHEMA = {
+      type: "OBJECT",
+      properties: {
+        score: { type: "NUMBER", description: "Оценка от 0 до 7 (можно с шагом 0.25, как на экзамене B1)" },
+        examPercent: { type: "NUMBER", description: "Процент выполнения от 0 до 100" },
+        ceglyEarned: { type: "NUMBER", description: "Сколько кирпичиков начислить (от 2 до 8)" },
+        verdict: { type: "STRING", description: "Короткий вердикт на русском: сдано или нужно доработать" },
+        strengths: {
+          type: "ARRAY",
+          items: { type: "STRING" },
+          description: "2-3 сильные стороны ответа на русском"
+        },
+        mistakes: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              original: { type: "STRING" },
+              corrected: { type: "STRING" },
+              reason: { type: "STRING" }
+            }
+          },
+          description: "Конкретные ошибки, кальки с русского, обрывы фраз и как исправить"
+        },
+        improvedVersion: { type: "STRING", description: "Улучшенный, естественный вариант ответа пользователя на польском языке на уровень B1" }
+      },
+      required: ["score", "examPercent", "ceglyEarned", "verdict", "strengths", "mistakes", "improvedVersion"]
+    };
+
+    async function evaluateExamTask(taskType, contextTitle, taskCondition, userAnswer, resultContainerId) {
+      const trimmed = userAnswer.trim();
+      if (trimmed.length < 15) {
+        showToast('Напиши или надиктуй хотя бы пару предложений для проверки!', 'warning');
+        return;
+      }
+
+      if (isRecording) stopVoiceInput();
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+
+      const container = document.getElementById(resultContainerId);
+      container.innerHTML = `
+        <div class="bg-white rounded-3xl p-6 card-shadow border border-purple-100 text-center space-y-3 mt-4">
+          <div class="w-10 h-10 border-4 border-brama-200 border-t-brama-600 rounded-full animate-spin mx-auto"></div>
+          <p class="font-semibold text-gray-800">Экзаменатор B1 проверяет твой ответ...</p>
+          <p class="text-xs text-gray-500">Анализируем грамматику, связки, объем и кальки с русского</p>
+        </div>
+      `;
+
+      const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+
+      const systemPrompt = `Ты — доброжелательный, но объективный экзаменатор государственного экзамена по польскому языку на уровне B1 (Państwowy Egzamin Certyfikatowy z Języka Polskiego jako Obcego).
+Твоя задача — оценить ответ русскоязычного студента по шкале 0–7 баллов.
+Обращай особое внимание на:
+1. Раскрытие темы и объем (для письма цель ~150 слов, сейчас слов: ${wordCount}; для фото/монолога важна связность из 5-8 предложений).
+2. Типичные русско-украинские кальки (например: 'obcinać warzywa' вместо 'kroić warzywa', 'deska dla...' вместо 'deska do krojenia', 'na dzień' вместо 'na zdjęciu', 'chodzą statki' вместо 'pływają statki', обрывы фраз на полуслове).
+3. Использование связок B1 (na pierwszym planie, moim zdaniem, podsumowując и др.).
+Объяснения пиши на русском языке, а улучшенный образец (improvedVersion) — на живом, грамотном польском языке уровня B1.`;
+
+      const userPrompt = `Тип задания: ${taskType}
+Тема: ${contextTitle}
+Условие / контекст: ${taskCondition}
+Количество слов в ответе: ${wordCount}
+Ответ студента на польском:
+"""
+${trimmed}
+"""`;
+
+      try {
+        const result = await callGeminiAPI(userPrompt, systemPrompt, EVALUATION_SCHEMA);
+
+        // Начисляем кирпичики и сохраняем в историю
+        const earned = Math.max(2, Math.min(10, Math.round(result.ceglyEarned || 4)));
+        appState.cegly += earned;
+        appState.history.unshift({
+          id: Date.now(),
+          date: new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+          type: taskType,
+          title: contextTitle,
+          score: result.score,
+          maxScore: 7,
+          userText: trimmed,
+          feedback: result
+        });
+        saveState();
+
+        showToast(`Проверка готова! +${earned} cegły в прогресс 🧱`, 'success');
+        renderEvaluationCard(result, earned, container);
+      } catch (err) {
+        container.innerHTML = `
+          <div class="bg-rose-50 border border-rose-200 rounded-3xl p-5 mt-4 text-sm text-rose-800">
+            <p class="font-bold mb-1">Не удалось связаться с AI-экзаменатором</p>
+            <p class="text-xs">Проверь интернет-соединение и нажми «Проверить ответ» еще раз.</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderEvaluationCard(res, earned, container) {
+      const scoreColor = res.score >= 5 ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
+                         res.score >= 3.5 ? 'text-brama-600 bg-brama-50 border-brama-200' :
+                         'text-amber-600 bg-amber-50 border-amber-200';
+
+      const mistakesHtml = (res.mistakes && res.mistakes.length > 0)
+        ? res.mistakes.map(m => `
+            <div class="bg-rose-50/70 border border-rose-100 rounded-2xl p-3 text-xs space-y-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="line-through text-rose-600 font-medium">${escapeHtml(m.original)}</span>
+                <span class="text-gray-400">→</span>
+                <span class="text-emerald-700 font-bold">${escapeHtml(m.corrected)}</span>
+              </div>
+              <p class="text-gray-600 leading-relaxed">${escapeHtml(m.reason)}</p>
+            </div>
+          `).join('')
+        : `<p class="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-2xl">Грубых ошибок и калек не найдено — отличная точность!</p>`;
+
+      container.innerHTML = `
+        <div class="bg-white rounded-3xl p-5 card-shadow border border-purple-100 mt-4 space-y-4">
+          <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Результат проверки</span>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span class="text-2xl font-extrabold text-gray-900">${res.score} / 7</span>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border ${scoreColor}">${res.examPercent}%</span>
+              </div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-2xl text-xs font-bold text-amber-800">
+              +${earned} 🧱 cegły
+            </div>
+          </div>
+
+          <p class="text-sm font-semibold text-gray-800 bg-brama-50/80 p-3 rounded-2xl border border-brama-100">
+            ${escapeHtml(res.verdict)}
+          </p>
+
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2">Что получилось хорошо:</h4>
+            <ul class="space-y-1.5 text-xs text-gray-700">
+              ${res.strengths.map(s => `<li class="flex items-start gap-2"><span class="text-emerald-500 font-bold">✓</span><span>${escapeHtml(s)}</span></li>`).join('')}
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-rose-700 mb-2">Разбор и исправления:</h4>
+            <div class="space-y-2">${mistakesHtml}</div>
+          </div>
+
+          <div class="bg-gray-50 rounded-2xl p-3.5 border border-gray-200/80">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-brama-700">Как сказать/написать на высокий балл:</span>
+              <button onclick="speakPolish(\`${escapeJs(res.improvedVersion)}\`)" class="text-xs bg-white border border-gray-200 hover:bg-brama-50 px-2.5 py-1 rounded-xl font-medium text-brama-700 flex items-center gap-1">
+                🔊 Прослушать
+              </button>
+            </div>
+            <p class="text-sm text-gray-800 leading-relaxed italic">«${escapeHtml(res.improvedVersion)}»</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 5. РОЛЕВЫЕ ДИАЛОГИ (РАЗДЕЛ «ПРАКТИКА / ROZMOWY»)
+    // =========================================================================
+
+    function startRoleplay(scenarioId) {
+      const scenario = ROLEPLAY_SCENARIOS.find(s => s.id === scenarioId);
+      if (!scenario) return;
+      activeRoleplay = scenario;
+      roleplayMessages = [
+        { sender: 'ai', text: scenario.openingLine }
+      ];
+      render();
+      speakPolish(scenario.openingLine);
+    }
+
+    function exitRoleplay() {
+      if (isRecording) stopVoiceInput();
+      window.speechSynthesis?.cancel();
+      activeRoleplay = null;
+      roleplayMessages = [];
+      render();
+    }
+
+    function insertPhraseToChat(phrase) {
+      const input = document.getElementById('chat-input');
+      if (!input) return;
+      input.value = input.value ? `${input.value.trim()} ${phrase}` : phrase;
+      input.focus();
+    }
+
+    async function sendRoleplayMessage() {
+      const input = document.getElementById('chat-input');
+      if (!input || isRoleplayLoading) return;
+      const text = input.value.trim();
+      if (!text) return;
+
+      if (isRecording) stopVoiceInput();
+
+      roleplayMessages.push({ sender: 'user', text });
+      input.value = '';
+      isRoleplayLoading = true;
+      render();
+
+      const chatBox = document.getElementById('chat-messages');
+      if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+      const historyText = roleplayMessages
+        .map(m => `${m.sender === 'ai' ? 'Собеседник' : 'Студент'}: ${m.text}`)
+        .join('\n');
+
+      const systemPrompt = `Ты играешь роль в экзаменационном диалоге по польскому языку на уровень B1.
+Твоя роль: ${activeRoleplay.aiRole}
+Задача студента в этом диалоге: ${activeRoleplay.userGoal}
+Правила:
+1. Отвечай ТОЛЬКО на живом, естественном польском языке (2-4 предложения), поддерживая реалистичный разговор.
+2. Задавай встречный вопрос или предлагай деталь, чтобы студент мог продолжить диалог.
+3. Не выходи из роли и не пиши переводы на русский внутри реплики.`;
+
+      try {
+        const reply = await callGeminiAPI(`История диалога:\n${historyText}\n\nОтветь следующей репликой собеседника на польском:`, systemPrompt);
+        roleplayMessages.push({ sender: 'ai', text: reply.trim() });
+        isRoleplayLoading = false;
+        render();
+        speakPolish(reply.trim());
+        const updatedBox = document.getElementById('chat-messages');
+        if (updatedBox) updatedBox.scrollTop = updatedBox.scrollHeight;
+      } catch (e) {
+        isRoleplayLoading = false;
+        showToast('Ошибка связи. Попробуй отправить сообщение еще раз.', 'error');
+        render();
+      }
+    }
+
+    async function finishAndGradeRoleplay() {
+      const userTurns = roleplayMessages.filter(m => m.sender === 'user');
+      if (userTurns.length < 2) {
+        showToast('Сделай хотя бы 2–3 реплики в диалоге перед оценкой!', 'warning');
+        return;
+      }
+
+      const fullDialogue = roleplayMessages
+        .map(m => `${m.sender === 'ai' ? 'Экзаменатор' : 'Кандидат'}: ${m.text}`)
+        .join('\n');
+
+      await evaluateExamTask(
+        'Диалог (Rozmowa B1)',
+        activeRoleplay.title,
+        `Роль: ${activeRoleplay.aiRole}. Задача: ${activeRoleplay.userGoal}`,
+        fullDialogue,
+        'roleplay-eval-result'
+      );
+    }
+
+    // =========================================================================
+    // 6. РЕНДЕРИНГ ВКЛАДОК ИНТЕРФЕЙСА
+    // =========================================================================
+
+    function switchTab(tab) {
+      if (isRecording) stopVoiceInput();
+      currentTab = tab;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchExamSubTab(sub) {
+      if (isRecording) stopVoiceInput();
+      resetTimer();
+      examSubTab = sub;
+      render();
+    }
+
+    function render() {
+      updateHeaderStats();
+
+      // Подсветка нижней навигации
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isActive = btn.id === `nav-${currentTab}`;
+        const wrap = btn.querySelector('.nav-icon-wrap');
+        if (isActive) {
+          btn.classList.add('text-brama-600');
+          btn.classList.remove('text-gray-500');
+          wrap.classList.add('bg-brama-100', 'text-brama-600');
+        } else {
+          btn.classList.remove('text-brama-600');
+          btn.classList.add('text-gray-500');
+          wrap.classList.remove('bg-brama-100', 'text-brama-600');
+        }
+      });
+
+      const app = document.getElementById('app-content');
+      if (currentTab === 'exams') {
+        app.innerHTML = renderExamsTab();
+        if (examSubTab === 'writing') updateWordCounter();
+      } else if (currentTab === 'practice') {
+        app.innerHTML = renderPracticeTab();
+      } else if (currentTab === 'vocab') {
+        app.innerHTML = renderVocabTab();
+      } else if (currentTab === 'progress') {
+        app.innerHTML = renderProgressTab();
+      }
+    }
+
+    // --- ВКЛАДКА 1: ЭКЗАМЕНЫ (Фото, Монолог, Письмо ~150 слов) ---
+    function renderExamsTab() {
+      const subTabsHtml = `
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
+          <button onclick="switchExamSubTab('photo')" class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition ${examSubTab === 'photo' ? 'bg-brama-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200'}">
+            1 · Описание фото
+          </button>
+          <button onclick="switchExamSubTab('monologue')" class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition ${examSubTab === 'monologue' ? 'bg-brama-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200'}">
+            2 · Монолог B1
+          </button>
+          <button onclick="switchExamSubTab('writing')" class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition ${examSubTab === 'writing' ? 'bg-brama-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200'}">
+            3 · Письмо (~150 слов)
+          </button>
+        </div>
+      `;
+
+      if (examSubTab === 'photo') {
+        const scene = PHOTO_SCENES[selectedPhotoIdx];
+        return `
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h1 class="text-xl font-extrabold text-gray-900">Устный экзамен B1</h1>
+              <div class="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-purple-100 text-xs font-bold text-brama-700">
+                <span>⏱️</span>
+                <span id="live-timer">${formatTime(timerSeconds)}</span>
+                <button onclick="resetTimer()" class="ml-1 text-gray-400 hover:text-gray-700" title="Сбросить таймер">↺</button>
+              </div>
+            </div>
+            ${subTabsHtml}
+
+            <!-- Выбор карточки фото -->
+            <div class="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
+              ${PHOTO_SCENES.map((s, idx) => `
+                <button onclick="selectedPhotoIdx=${idx}; resetTimer(); render();" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex-shrink-0 ${selectedPhotoIdx === idx ? 'bg-brama-100 text-brama-700 border border-brama-300' : 'bg-white text-gray-600 border border-gray-200'}">
+                  Фото #${idx + 1}
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 card-shadow border border-purple-100 space-y-3">
+              <div class="flex items-center justify-between">
+                <h2 class="font-bold text-gray-900 text-sm">${scene.title}</h2>
+                <span class="text-[11px] font-semibold text-brama-600 bg-brama-50 px-2.5 py-0.5 rounded-full">Цель: 6–8 фраз</span>
+              </div>
+
+              ${scene.svg}
+
+              <div class="bg-purple-50/70 rounded-2xl p-3 border border-purple-100">
+                <p class="text-[11px] font-bold text-brama-700 mb-1.5">Опорные слова и связки (нажми, чтобы вставить):</p>
+                <div class="flex flex-wrap gap-1.5">
+                  ${scene.hintWords.map(w => `
+                    <button onclick="appendWord('photo-answer', '${w}')" class="text-xs bg-white hover:bg-brama-100 text-gray-700 border border-purple-200/70 px-2.5 py-1 rounded-xl transition">
+                      + ${w}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1.5">Твой ответ на польском (голосом или текстом):</label>
+                <textarea id="photo-answer" rows="4" placeholder="Na zdjęciu widzę... Na pierwszym planie znajduje się..." class="w-full rounded-2xl border border-gray-200 focus:border-brama-500 focus:ring-2 focus:ring-brama-200 outline-none p-3 text-sm text-gray-800 transition"></textarea>
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button id="photo-mic-btn" onclick="toggleVoiceInput('photo-answer', 'photo-mic-btn')" class="flex-1 py-3 px-4 rounded-2xl bg-brama-100 hover:bg-brama-200 text-brama-700 font-bold text-xs flex items-center justify-center gap-2 transition">
+                  🎙️ Надиктовать ответ (pl-PL)
+                </button>
+                <button onclick="evaluateExamTask('Задание 1 — Описание фото', '${escapeJs(scene.title)}', '${escapeJs(scene.promptInfo)}', document.getElementById('photo-answer').value, 'photo-eval-result')" class="flex-1 py-3 px-4 rounded-2xl bg-brama-600 hover:bg-brama-700 text-white font-bold text-xs shadow-sm transition">
+                  ✨ Проверить и оценить (0–7)
+                </button>
+              </div>
+            </div>
+
+            <div id="photo-eval-result"></div>
+          </div>
+        `;
+      }
+
+      if (examSubTab === 'monologue') {
+        const topic = MONOLOGUE_TOPICS[selectedMonoIdx];
+        return `
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h1 class="text-xl font-extrabold text-gray-900">Монолог B1</h1>
+              <div class="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-purple-100 text-xs font-bold text-brama-700">
+                <span>⏱️</span>
+                <span id="live-timer">${formatTime(timerSeconds)}</span>
+                <button onclick="resetTimer()" class="ml-1 text-gray-400 hover:text-gray-700">↺</button>
+              </div>
+            </div>
+            ${subTabsHtml}
+
+            <div class="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
+              ${MONOLOGUE_TOPICS.map((t, idx) => `
+                <button onclick="selectedMonoIdx=${idx}; resetTimer(); render();" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex-shrink-0 ${selectedMonoIdx === idx ? 'bg-brama-100 text-brama-700 border border-brama-300' : 'bg-white text-gray-600 border border-gray-200'}">
+                  Тема #${idx + 1}
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 card-shadow border border-purple-100 space-y-3.5">
+              <div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brama-600">Экзаменационная карточка</span>
+                <h2 class="font-bold text-gray-900 text-base mt-0.5">${topic.title}</h2>
+              </div>
+
+              <div class="bg-amber-50/70 border border-amber-200/70 rounded-2xl p-3.5 space-y-1.5">
+                <p class="text-xs font-bold text-amber-900">План ответа (раскрой все 3 пункта без обрывов):</p>
+                <ul class="text-xs text-amber-950 space-y-1">
+                  ${topic.points.map((p, i) => `<li><strong>${i + 1}.</strong> ${p}</li>`).join('')}
+                </ul>
+              </div>
+
+              <div>
+                <textarea id="mono-answer" rows="5" placeholder="Dzień dobry. Chciałbym opowiedzieć o..." class="w-full rounded-2xl border border-gray-200 focus:border-brama-500 focus:ring-2 focus:ring-brama-200 outline-none p-3 text-sm text-gray-800 transition"></textarea>
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button id="mono-mic-btn" onclick="toggleVoiceInput('mono-answer', 'mono-mic-btn')" class="flex-1 py-3 px-4 rounded-2xl bg-brama-100 hover:bg-brama-200 text-brama-700 font-bold text-xs flex items-center justify-center gap-2 transition">
+                  🎙️ Записать монолог (pl-PL)
+                </button>
+                <button onclick="evaluateExamTask('Задание 2 — Монолог B1', '${escapeJs(topic.title)}', '${escapeJs(topic.points.join(' | '))}', document.getElementById('mono-answer').value, 'mono-eval-result')" class="flex-1 py-3 px-4 rounded-2xl bg-brama-600 hover:bg-brama-700 text-white font-bold text-xs shadow-sm transition">
+                  ✨ Оценить монолог
+                </button>
+              </div>
+
+              <details class="text-xs bg-gray-50 rounded-2xl p-3 border border-gray-200/70">
+                <summary class="font-bold text-brama-700 cursor-pointer">Подсмотреть образец ответа на 7/7 баллов</summary>
+                <p class="mt-2 text-gray-700 leading-relaxed italic">«${topic.modelAnswer}»</p>
+                <button onclick="speakPolish(\`${escapeJs(topic.modelAnswer)}\`)" class="mt-2 bg-white border border-gray-200 px-3 py-1 rounded-xl font-semibold text-brama-700">
+                  🔊 Прослушать произношение
+                </button>
+              </details>
+            </div>
+
+            <div id="mono-eval-result"></div>
+          </div>
+        `;
+      }
+
+      // Письмо (Pisanie ~150 слов)
+      const wTopic = WRITING_TOPICS[selectedWritingIdx];
+      return `
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h1 class="text-xl font-extrabold text-gray-900">Письмо (Pisanie B1)</h1>
+            <span class="text-xs font-bold bg-brama-100 text-brama-700 px-3 py-1 rounded-full">Цель: ~150 слов</span>
+          </div>
+          ${subTabsHtml}
+
+          <div class="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
+            ${WRITING_TOPICS.map((w, idx) => `
+              <button onclick="selectedWritingIdx=${idx}; render();" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition flex-shrink-0 ${selectedWritingIdx === idx ? 'bg-brama-100 text-brama-700 border border-brama-300' : 'bg-white text-gray-600 border border-gray-200'}">
+                Вариант #${idx + 1}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="bg-white rounded-3xl p-4 card-shadow border border-purple-100 space-y-3.5">
+            <div>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-brama-600">${wTopic.type}</span>
+              <h2 class="font-bold text-gray-900 text-base mt-0.5">${wTopic.title}</h2>
+            </div>
+
+            <div class="bg-purple-50/70 border border-purple-100 rounded-2xl p-3.5 text-xs text-gray-800 whitespace-pre-line leading-relaxed">
+              ${wTopic.task}
+            </div>
+
+            <!-- Живой счетчик слов как на реальном экзамене -->
+            <div class="bg-gray-50 rounded-2xl p-3 border border-gray-200/80 space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold text-gray-600">Счетчик слов (норма 135–185):</span>
+                <span id="word-count-badge" class="font-extrabold text-amber-600">0 / 150 слов</span>
+              </div>
+              <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="word-count-bar" class="h-full bg-amber-500 transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div>
+              <textarea id="writing-answer" oninput="updateWordCounter()" rows="8" placeholder="Cześć Marku! / Szanowny Panie! Piszę do Ciebie, ponieważ..." class="w-full rounded-2xl border border-gray-200 focus:border-brama-500 focus:ring-2 focus:ring-brama-200 outline-none p-3 text-sm text-gray-800 leading-relaxed transition"></textarea>
+            </div>
+
+            <button onclick="evaluateExamTask('Задание 3 — Письмо B1 (~150 слов)', '${escapeJs(wTopic.title)}', '${escapeJs(wTopic.task)}', document.getElementById('writing-answer').value, 'writing-eval-result')" class="w-full py-3.5 px-4 rounded-2xl bg-brama-600 hover:bg-brama-700 text-white font-bold text-xs shadow-sm transition">
+              ✨ Проверить письмо и грамматику B1
+            </button>
+          </div>
+
+          <div id="writing-eval-result"></div>
+        </div>
+      `;
+    }
+
+    function appendWord(textareaId, word) {
+      const el = document.getElementById(textareaId);
+      if (!el) return;
+      const cur = el.value.trim();
+      el.value = cur ? `${cur} ${word} ` : `${word} `;
+      el.focus();
+    }
+
+    function updateWordCounter() {
+      const textarea = document.getElementById('writing-answer');
+      const badge = document.getElementById('word-count-badge');
+      const bar = document.getElementById('word-count-bar');
+      if (!textarea || !badge || !bar) return;
+
+      const words = textarea.value.trim().split(/\s+/).filter(Boolean);
+      const count = words.length;
+      const pct = Math.min(100, Math.round((count / 150) * 100));
+
+      bar.style.width = `${pct}%`;
+
+      if (count >= 135 && count <= 185) {
+        badge.textContent = `${count} / 150 слов (Идеальный объем!)`;
+        badge.className = 'font-extrabold text-emerald-600';
+        bar.className = 'h-full bg-emerald-500 transition-all duration-300';
+      } else if (count > 185) {
+        badge.textContent = `${count} / 150 слов (Чуть длиннее нормы)`;
+        badge.className = 'font-extrabold text-brama-600';
+        bar.className = 'h-full bg-brama-600 transition-all duration-300';
+      } else {
+        badge.textContent = `${count} / 150 слов`;
+        badge.className = 'font-extrabold text-amber-600';
+        bar.className = 'h-full bg-amber-500 transition-all duration-300';
+      }
+    }
+
+    // --- ВКЛАДКА 2: ПРАКТИКА (ROZMOWY / РОЛЕВЫЕ ДИАЛОГИ БЕЗ ЗАМКОВ) ---
+    function renderPracticeTab() {
+      if (activeRoleplay) {
+        return `
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <button onclick="exitRoleplay()" class="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-brama-600 bg-white px-3 py-2 rounded-2xl border border-gray-200">
+                ← К списку диалогов
+              </button>
+              <button onclick="finishAndGradeRoleplay()" class="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-2xl shadow-sm">
+                🏁 Завершить и оценить
+              </button>
+            </div>
+
+            <div class="bg-gradient-to-r from-brama-600 to-brama-500 text-white rounded-3xl p-4 shadow-sm">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xl">${activeRoleplay.icon}</span>
+                <h2 class="font-bold text-base">${activeRoleplay.title}</h2>
+              </div>
+              <p class="text-xs text-purple-100 leading-relaxed"><strong>Твоя задача:</strong> ${activeRoleplay.userGoal}</p>
+            </div>
+
+            <!-- Окно чата -->
+            <div id="chat-messages" class="bg-white rounded-3xl p-4 card-shadow border border-purple-100 space-y-3 max-h-[340px] overflow-y-auto">
+              ${roleplayMessages.map(m => m.sender === 'ai' ? `
+                <div class="flex flex-col items-start max-w-[88%]">
+                  <div class="bg-purple-50 border border-purple-100 text-gray-800 rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-sm leading-relaxed">
+                    ${escapeHtml(m.text)}
+                  </div>
+                  <button onclick="speakPolish(\`${escapeJs(m.text)}\`)" class="text-[11px] text-brama-600 font-semibold mt-1 ml-1 hover:underline">
+                    🔊 Озвучить реплику
+                  </button>
+                </div>
+              ` : `
+                <div class="flex flex-col items-end ml-auto max-w-[88%]">
+                  <div class="bg-brama-600 text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-sm leading-relaxed">
+                    ${escapeHtml(m.text)}
+                  </div>
+                </div>
+              `).join('')}
+
+              ${isRoleplayLoading ? `
+                <div class="flex items-center gap-2 text-xs text-gray-400 italic">
+                  <span class="w-2 h-2 bg-brama-500 rounded-full animate-bounce"></span>
+                  Собеседник печатает ответ...
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Подсказки фраз для диалога -->
+            <div class="bg-white rounded-2xl p-3 border border-purple-100">
+              <p class="text-[11px] font-bold text-gray-400 uppercase mb-1.5">Полезные фразы для ответа:</p>
+              <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                ${activeRoleplay.usefulPhrases.map(p => `
+                  <button onclick="insertPhraseToChat('${escapeJs(p)}')" class="flex-shrink-0 text-xs bg-brama-50 hover:bg-brama-100 text-brama-700 font-medium px-3 py-1.5 rounded-xl border border-brama-200/60 transition">
+                    + ${p}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Поле ввода сообщения -->
+            <div class="flex items-center gap-2 bg-white p-2 rounded-3xl card-shadow border border-purple-100">
+              <button id="chat-mic-btn" onclick="toggleVoiceInput('chat-input', 'chat-mic-btn')" class="w-11 h-11 rounded-2xl bg-brama-100 text-brama-700 flex items-center justify-center flex-shrink-0 font-bold" title="Голосовой ввод">
+                🎙️
+              </button>
+              <input id="chat-input" type="text" onkeydown="if(event.key==='Enter') sendRoleplayMessage()" placeholder="Ответь по-польски..." class="flex-1 text-sm outline-none px-2 text-gray-800" />
+              <button onclick="sendRoleplayMessage()" class="px-4 h-11 rounded-2xl bg-brama-600 hover:bg-brama-700 text-white font-bold text-xs flex-shrink-0 transition">
+                Отправить
+              </button>
+            </div>
+
+            <div id="roleplay-eval-result"></div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="space-y-4">
+          <div>
+            <h1 class="text-2xl font-extrabold text-gray-900">Rozmowy</h1>
+            <p class="text-xs text-gray-500 mt-0.5">Ролевые диалоги для экзамена B1 • <span class="text-emerald-600 font-bold">Все сценарии открыты 24/7</span></p>
+          </div>
+
+          <!-- Главная карточка как в Brama App (но полностью разблокированная!) -->
+          <div class="bg-gradient-to-br from-brama-600 to-brama-500 rounded-3xl p-5 text-white shadow-md relative overflow-hidden">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-white/95 flex items-center justify-center text-2xl shadow-sm flex-shrink-0">
+                  ⛷️
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-purple-200">Рекомендуемый сценарий B1</span>
+                  <h2 class="text-lg font-extrabold leading-tight mt-0.5">Лыжи в Закопане</h2>
+                  <div class="flex items-center gap-1.5 mt-2">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20">Państwowy B1</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/30 text-emerald-100">Без лимита</span>
+                  </div>
+                </div>
+              </div>
+              <span class="text-xl bg-white/15 p-2 rounded-2xl">🔓</span>
+            </div>
+            <button onclick="startRoleplay('zakopane_ski')" class="mt-4 w-full py-3 rounded-2xl bg-white text-brama-700 font-extrabold text-xs hover:bg-purple-50 transition shadow-sm">
+              Начать разговор прямо сейчас →
+            </button>
+          </div>
+
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2.5">Все категории (открыты без подписки)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${ROLEPLAY_SCENARIOS.map(sc => `
+                <div onclick="startRoleplay('${sc.id}')" class="bg-white hover:border-brama-400 cursor-pointer rounded-3xl p-4 card-shadow border border-gray-100 transition flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center justify-between mb-2.5">
+                      <div class="w-10 h-10 rounded-2xl bg-brama-50 flex items-center justify-center text-xl">
+                        ${sc.icon}
+                      </div>
+                      <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">${sc.badge}</span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 text-sm">${sc.title}</h4>
+                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">${sc.category}</p>
+                  </div>
+                  <div class="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-brama-600">
+                    <span>Открыть диалог</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- ВКЛАДКА 3: СЛОВАРЬ (АНТИ-КАЛЬКА И СВЯЗКИ B1) ---
+    function toggleMasteredCard(cardId) {
+      const idx = appState.masteredCards.indexOf(cardId);
+      if (idx === -1) {
+        appState.masteredCards.push(cardId);
+        appState.cegly += 1;
+        showToast('Карточка выучена! +1 cegła 🧱', 'success');
+      } else {
+        appState.masteredCards.splice(idx, 1);
+      }
+      saveState();
+      render();
+    }
+
+    function renderVocabTab() {
+      const masteredCount = appState.masteredCards.length;
+      return `
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-xl font-extrabold text-gray-900">Словарь ловушек B1</h1>
+              <p class="text-xs text-gray-500">Замена калек и готовые связки для экзамена</p>
+            </div>
+            <span class="text-xs font-bold bg-brama-100 text-brama-700 px-3 py-1 rounded-full">
+              ${masteredCount} / ${VOCAB_CARDS.length}
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            ${VOCAB_CARDS.map(card => {
+              const isDone = appState.masteredCards.includes(card.id);
+              return `
+                <div class="bg-white rounded-3xl p-4 card-shadow border ${isDone ? 'border-emerald-200 bg-emerald-50/20' : 'border-purple-100'} space-y-2.5">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${card.tag.includes('ловушка') ? 'bg-rose-100 text-rose-700' : 'bg-brama-100 text-brama-700'}">
+                      ${card.tag}
+                    </span>
+                    <button onclick="speakPolish(\`${escapeJs(card.right)}\`)" class="text-xs font-semibold text-brama-600 hover:bg-brama-50 px-2.5 py-1 rounded-xl">
+                      🔊 Слушать
+                    </button>
+                  </div>
+
+                  <div class="space-y-1">
+                    <p class="text-xs text-rose-500 line-through">✗ ${card.wrong}</p>
+                    <p class="text-base font-extrabold text-emerald-700">✓ ${card.right}</p>
+                  </div>
+
+                  <p class="text-xs text-gray-600 leading-relaxed">${card.explanation}</p>
+
+                  <div class="bg-gray-50 rounded-2xl p-2.5 text-xs text-gray-800 italic border border-gray-100 flex items-center justify-between gap-2">
+                    <span>«${card.example}»</span>
+                    <button onclick="speakPolish(\`${escapeJs(card.example)}\`)" class="text-brama-600 font-bold flex-shrink-0">🔊</button>
+                  </div>
+
+                  <button onclick="toggleMasteredCard('${card.id}')" class="w-full py-2 rounded-2xl text-xs font-bold transition ${isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 hover:bg-brama-100 text-gray-700 hover:text-brama-700'}">
+                    ${isDone ? '✓ Запомнил (+1 cegła получена)' : 'Отметить как выученное (+1 🧱)'}
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // --- ВКЛАДКА 4: ПРОГРЕСС И ИСТОРИЯ РАЗБОРОВ ---
+    function renderProgressTab() {
+      const totalTasks = appState.history.length;
+      const avgScore = totalTasks > 0
+        ? (appState.history.reduce((acc, item) => acc + Number(item.score || 0), 0) / totalTasks).toFixed(2)
+        : '—';
+      const avgPercent = totalTasks > 0
+        ? Math.round((Number(avgScore) / 7) * 100)
+        : 0;
+
+      return `
+        <div class="space-y-4">
+          <h1 class="text-xl font-extrabold text-gray-900">Твой прогресс к B1</h1>
+
+          <div class="grid grid-cols-3 gap-2.5">
+            <div class="bg-amber-50 border border-amber-200 rounded-3xl p-3.5 text-center">
+              <div class="text-2xl mb-0.5">🧱</div>
+              <div class="text-xl font-extrabold text-amber-900">${appState.cegly}</div>
+              <div class="text-[11px] font-medium text-amber-700">Cegieł</div>
+            </div>
+            <div class="bg-white border border-purple-100 rounded-3xl p-3.5 text-center card-shadow">
+              <div class="text-2xl mb-0.5">🎯</div>
+              <div class="text-xl font-extrabold text-brama-700">${avgScore}</div>
+              <div class="text-[11px] font-medium text-gray-500">Средний (из 7)</div>
+            </div>
+            <div class="bg-white border border-purple-100 rounded-3xl p-3.5 text-center card-shadow">
+              <div class="text-2xl mb-0.5">📊</div>
+              <div class="text-xl font-extrabold text-emerald-600">${totalTasks > 0 ? avgPercent + '%' : '0%'}</div>
+              <div class="text-[11px] font-medium text-gray-500">Готовность</div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-4 card-shadow border border-purple-100">
+            <h2 class="text-sm font-bold text-gray-900 mb-3">История проверенных заданий</h2>
+            ${totalTasks === 0 ? `
+              <div class="text-center py-6 space-y-2">
+                <p class="text-sm text-gray-500">Здесь появятся твои оценки и разборы.</p>
+                <button onclick="switchTab('exams')" class="px-4 py-2 rounded-2xl bg-brama-600 text-white text-xs font-bold">
+                  Перейти к первому заданию
+                </button>
+              </div>
+            ` : `
+              <div class="space-y-2.5">
+                ${appState.history.map(item => `
+                  <details class="bg-gray-50 rounded-2xl p-3 border border-gray-200/80">
+                    <summary class="flex items-center justify-between cursor-pointer list-none">
+                      <div>
+                        <span class="text-[10px] font-bold uppercase text-brama-600">${escapeHtml(item.type)}</span>
+                        <p class="text-xs font-bold text-gray-900">${escapeHtml(item.title)}</p>
+                        <span class="text-[10px] text-gray-400">${item.date}</span>
+                      </div>
+                      <span class="text-sm font-extrabold px-2.5 py-1 rounded-xl bg-white border border-purple-100 text-brama-700">
+                        ${item.score} / 7
+                      </span>
+                    </summary>
+                    <div class="mt-3 pt-2.5 border-t border-gray-200 text-xs space-y-2">
+                      <p class="text-gray-600"><strong>Твой ответ:</strong> ${escapeHtml(item.userText)}</p>
+                      <p class="text-emerald-800 bg-emerald-50 p-2 rounded-xl"><strong>Образец:</strong> ${escapeHtml(item.feedback.improvedVersion)}</p>
+                    </div>
+                  </details>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // Утилиты экранирования HTML и JS-строк
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escapeJs(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/`/g, '\\`')
+        .replace(/\n/g, ' ');
+    }
+
+    // Инициализация приложения
+    window.addEventListener('DOMContentLoaded', () => {
+      render();
+    });
+  </script>
+</body>
+</html>
